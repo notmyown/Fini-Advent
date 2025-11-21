@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <title>Fini Adventskalender</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: radial-gradient(circle at top, #345d3d 0%, #123023 40%, #050b10 100%);
+      color: #fff;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 10px 10px 20px;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    h1 {
+      margin: 10px 0 5px;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      font-size: 1.7rem;
+      text-align: center;
+    }
+
+    .subtitle {
+      text-align: center;
+      font-size: 0.95rem;
+      opacity: 0.9;
+      margin-bottom: 10px;
+    }
+
+    .calendar-wrapper {
+      background: rgba(0, 0, 0, 0.35);
+      border-radius: 16px;
+      padding: 12px;
+      border: 1px solid rgba(255, 215, 0, 0.5);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(4px);
+      z-index: 5;
+      width: 100%;
+      max-width: 850px;
+    }
+
+    .calendar-header {
+      text-align: center;
+      font-size: 0.9rem;
+      margin-bottom: 6px;
+      color: #f8f1d4;
+    }
+
+    .calendar {
+      display: grid;
+      gap: 8px;
+    }
+
+    /* Desktop */
+    @media (min-width: 1024px) {
+      .calendar {
+        grid-template-columns: repeat(6, 1fr);
+      }
+    }
+
+    /* Tablets */
+    @media (min-width: 768px) and (max-width: 1023px) {
+      .calendar {
+        grid-template-columns: repeat(5, 1fr);
+      }
+    }
+
+    /* Smartphones */
+    @media (min-width: 480px) and (max-width: 767px) {
+      .calendar {
+        grid-template-columns: repeat(4, 1fr);
+      }
+    }
+
+    /* Kleine Smartphones */
+    @media (max-width: 479px) {
+      .calendar {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+
+    .door {
+      position: relative;
+      background: linear-gradient(145deg, #7b1113, #b22222);
+      border-radius: 12px;
+      border: 2px solid rgba(255, 215, 0, 0.9);
+      height: 95px;
+      cursor: pointer;
+      overflow: hidden;
+      transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      touch-action: manipulation;
+    }
+
+    @media (min-width: 768px) {
+      .door {
+        height: 110px;
+      }
+    }
+
+    .door[aria-disabled="true"] {
+      opacity: 0.6;
+      cursor: not-allowed;
+      filter: grayscale(0.15);
+    }
+
+    .door:hover:not([aria-disabled="true"]) {
+      transform: translateY(-3px) scale(1.02);
+      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.45);
+      filter: brightness(1.08);
+    }
+
+    .door:active:not([aria-disabled="true"]) {
+      transform: translateY(0) scale(0.98);
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
+    }
+
+    .door-front,
+    .door-inner {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      backface-visibility: hidden;
+      transition: transform 0.45s ease;
+      transform-origin: left center;
+    }
+
+    .door-front {
+      background: linear-gradient(145deg, #7b1113, #b22222);
+    }
+
+    .door-number {
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: #f9e7b3;
+      text-shadow: 0 0 6px rgba(0, 0, 0, 0.9);
+    }
+
+    .door-inner {
+      background: radial-gradient(circle at top, #fdf6e3 0%, #f5e3c7 40%, #e7cba4 100%);
+      transform: rotateY(90deg);
+      padding: 4px;
+    }
+
+    .door-inner img {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+      border-radius: 8px;
+      box-shadow: 0 3px 8px rgba(0, 0, 0, 0.35);
+    }
+
+    .door.opened .door-front {
+      transform: rotateY(-90deg);
+    }
+
+    .door.opened .door-inner {
+      transform: rotateY(0deg);
+    }
+
+    .footer {
+      margin-top: 10px;
+      font-size: 0.8rem;
+      text-align: center;
+      color: #f2e2c4;
+      z-index: 5;
+    }
+
+    .footer a {
+      color: #ffd700;
+      text-decoration: underline;
+      margin-left: 8px;
+    }
+
+    .footer a:hover {
+      text-decoration: none;
+    }
+
+    /* Overlay / Modal */
+    .overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.85);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      padding: 12px;
+    }
+
+    .overlay.visible {
+      display: flex;
+    }
+
+    .overlay-content {
+      position: relative;
+      max-width: 85vw;
+      max-height: 85vh;
+      background: #000;
+      border-radius: 12px;
+      padding: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.9);
+    }
+
+    .overlay-content img {
+      width: 90vw;
+      height: 90vh;
+      object-fit: contain;
+      display: block;
+    }
+
+    .overlay-close {
+      position: absolute;
+      top: 6px;
+      right: 8px;
+      font-size: 1.6rem;
+      background: none;
+      border: none;
+      color: #fff;
+      cursor: pointer;
+      line-height: 1;
+    }
+
+    .overlay-close:focus {
+      outline: 2px solid #fff;
+      outline-offset: 2px;
+    }
+
+    /* Schneefall */
+    .snow-layer {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      overflow: hidden;
+      z-index: 1;
+    }
+
+    .snowflake {
+      position: absolute;
+      top: -10%;
+      color: #fff;
+      opacity: 0.8;
+      user-select: none;
+      animation-name: snow-fall;
+      animation-timing-function: linear;
+      animation-iteration-count: infinite;
+    }
+
+    @keyframes snow-fall {
+      0% {
+        transform: translate3d(0, -10%, 0);
+      }
+      100% {
+        transform: translate3d(0, 120vh, 0);
+      }
+    }
+
+  </style>
+</head>
+
+<body>
+  <!-- Schneefall-Layer -->
+  <div class="snow-layer" id="snow-layer"></div>
+
+  <h1 id="page-title"></h1>
+
+  <div class="calendar-wrapper">
+    <div class="calendar-header" id="calendar-header"></div>
+    <div class="calendar" id="calendar"></div>
+  </div>
+
+  <div class="footer">
+    Geöffnete Türchen werden in einem Cookie gespeichert.
+    <a href="#" id="clear-cookies-link">Cookies löschen &amp; neu laden</a>
+  </div>
+
+  <!-- Overlay -->
+  <div class="overlay" id="overlay">
+    <div class="overlay-content">
+      <button class="overlay-close" id="overlay-close" aria-label="Overlay schließen">&times;</button>
+      <img id="overlay-image" src="" alt="Adventskalender-Bild" />
+    </div>
+  </div>
+
+  <!-- Sound beim Öffnen (open.mp3 muss im gleichen Ordner liegen) -->
+  <audio id="open-sound" src="open.mp3" preload="auto"></audio>
+  <!-- Hintergrundmusik im Loop -->
+  <audio id="bg-music" src="loop.mp3" loop></audio>
+
+  <script>
+    const CURRENT_YEAR = new Date().getFullYear();
+    const IMAGE_BASE_PATH = "./" + CURRENT_YEAR + "/";
+    const TOTAL_DOORS = 24;
+    const COOKIE_NAME = "adventOpenedDoors";
+    const ORDER_COOKIE_NAME = "adventDoorOrder";
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const ALL_OPEN = urlParams.get("allopen") === "true";
+
+    // Überschrift "Fini <Jahr>"
+    document.getElementById("page-title").textContent = "🎁 Fini " + CURRENT_YEAR + " 🎁";
+
+    function twoDigit(n) {
+      return String(n).padStart(2, "0");
+    }
+
+    // Cookie-Funktionen
+    function setCookie(name, value, days) {
+      const d = new Date();
+      d.setTime(d.getTime() + (days * 24 * 60 * 60 * 1000));
+      document.cookie = name + "=" + encodeURIComponent(value) + ";expires=" + d.toUTCString() + ";path=/";
+    }
+
+    function getCookie(name) {
+      const cname = name + "=";
+      const ca = document.cookie.split(";");
+      for (let c of ca) {
+        c = c.trim();
+        if (c.indexOf(cname) === 0) {
+          return c.substring(cname.length);
+        }
+      }
+      return "";
+    }
+
+    function deleteCookie(name) {
+      document.cookie = name + "=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+    }
+
+    // Geöffnete Türchen aus Cookie laden
+    let openedDoors = [];
+    const cookieVal = decodeURIComponent(getCookie(COOKIE_NAME));
+    if (cookieVal) {
+      try {
+        const parsed = JSON.parse(cookieVal);
+        if (Array.isArray(parsed)) {
+          openedDoors = parsed;
+        }
+      } catch {
+        openedDoors = [];
+      }
+    }
+
+    // Zufällige Reihenfolge der Türchen
+    function generateRandomOrder() {
+      const arr = [];
+      for (let i = 1; i <= TOTAL_DOORS; i++) {
+        arr.push(i);
+      }
+      // Fisher-Yates Shuffle
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr;
+    }
+
+    function loadDoorOrder() {
+      const orderCookieVal = decodeURIComponent(getCookie(ORDER_COOKIE_NAME));
+      if (orderCookieVal) {
+        try {
+          const parsed = JSON.parse(orderCookieVal);
+          if (Array.isArray(parsed) && parsed.length === TOTAL_DOORS) {
+            return parsed;
+          }
+        } catch {
+          // ignorieren, neu generieren
+        }
+      }
+      const newOrder = generateRandomOrder();
+      setCookie(ORDER_COOKIE_NAME, JSON.stringify(newOrder), 40);
+      return newOrder;
+    }
+
+    const doorOrder = loadDoorOrder();
+
+    const todayDate = new Date();
+    const today = todayDate.getDate();
+    const month = todayDate.getMonth() + 1;
+
+    const calendar = document.getElementById("calendar");
+    const calendarHeader = document.getElementById("calendar-header");
+    const overlay = document.getElementById("overlay");
+    const overlayImg = document.getElementById("overlay-image");
+    const overlayClose = document.getElementById("overlay-close");
+    const openSound = document.getElementById("open-sound");
+
+    calendarHeader.innerHTML =
+      `Heute ist der <strong>${today}. ${month}.</strong>`;
+
+    function isDoorOpenable(n) {
+      if (ALL_OPEN) return true;
+      // Tür kann ab ihrem Datum geöffnet werden (z.B. 5 ab dem 5.), nur im Dezember
+      return today >= n && month == 12;
+      // Nur am exakten Tag:
+      // return today === n;
+    }
+
+    function playOpenSound() {
+      if (!openSound) return;
+      const p = openSound.play();
+      if (p && typeof p.then === "function") {
+        p.catch(() => {
+          // Autoplay-Blocker ignorieren
+        });
+      }
+    }
+
+    function showOverlay(n) {
+      overlayImg.src = IMAGE_BASE_PATH + twoDigit(n) + ".png";
+      overlayImg.alt = "Adventskalender-Bild " + n;
+      overlay.classList.add("visible");
+    }
+
+    function hideOverlay() {
+      overlay.classList.remove("visible");
+      overlayImg.src = "";
+    }
+
+    // Kalender erzeugen – mit zufälliger, aber persistenter Reihenfolge
+    for (const dayNumber of doorOrder) {
+      const i = dayNumber; // tatsächliche Türnummer
+
+      const door = document.createElement("button");
+      door.className = "door";
+      door.type = "button";
+
+      if (!isDoorOpenable(i)) {
+        door.setAttribute("aria-disabled", "true");
+      }
+
+      const front = document.createElement("div");
+      front.className = "door-front";
+      const numberSpan = document.createElement("span");
+      numberSpan.className = "door-number";
+      numberSpan.textContent = i;
+      front.appendChild(numberSpan);
+
+      const inner = document.createElement("div");
+      inner.className = "door-inner";
+
+      const img = document.createElement("img");
+      img.src = IMAGE_BASE_PATH + twoDigit(i) + ".png";
+      img.alt = "Bild für Tag " + i;
+      inner.appendChild(img);
+
+      door.appendChild(front);
+      door.appendChild(inner);
+
+      if (openedDoors.includes(i)) {
+        door.classList.add("opened");
+      }
+
+      door.addEventListener("click", () => {
+        if (!isDoorOpenable(i)) {
+          alert("Dieses Türchen kannst du noch nicht öffnen.");
+          return;
+        }
+
+        if (!openedDoors.includes(i)) {
+          openedDoors.push(i);
+          setCookie(COOKIE_NAME, JSON.stringify(openedDoors), 40);
+        }
+
+        door.classList.add("opened");
+        playOpenSound();
+        showOverlay(i);
+      });
+
+      calendar.appendChild(door);
+    }
+
+    // Overlay-Events
+    overlayClose.addEventListener("click", hideOverlay);
+    overlay.addEventListener("click", (e) => {
+      if (e.target === overlay) {
+        hideOverlay();
+      }
+    });
+
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && overlay.classList.contains("visible")) {
+        hideOverlay();
+      }
+    });
+
+    // Cookies löschen (inkl. Reihenfolge)
+    document.getElementById("clear-cookies-link").addEventListener("click", (e) => {
+      e.preventDefault();
+      if (confirm("Möchtest du den Adventskalender wirklich zurücksetzen?")) {
+        deleteCookie(COOKIE_NAME);
+        deleteCookie(ORDER_COOKIE_NAME);
+        location.reload();
+      }
+    });
+
+    const bgMusic = document.getElementById("bg-music");
+    let musicStarted = false;
+
+    // Startet Musik beim ersten User-Interaktions-Klick
+    document.addEventListener("click", () => {
+      if (!musicStarted) {
+        bgMusic.volume = 0.05;   // 🔉 Lautstärke 0 = leise / 1 = laut
+        bgMusic.play().catch(()=>{});
+        musicStarted = true;
+      }
+    });
+
+    // Schneefall erzeugen
+    const snowLayer = document.getElementById("snow-layer");
+    const SNOWFLAKE_COUNT = 60;
+
+    function createSnowflake() {
+      const sf = document.createElement("div");
+      sf.className = "snowflake";
+      sf.textContent = Math.random() < 0.5 ? "❄" : "•";
+
+      const size = Math.random() * 12 + 6; // 6–18 px
+      const left = Math.random() * 100;    // 0–100 %
+      const duration = Math.random() * 10 + 10; // 10–20 s
+      const delay = Math.random() * 10;    // 0–10 s
+
+      sf.style.fontSize = size + "px";
+      sf.style.left = left + "vw";
+      sf.style.animationDuration = duration + "s";
+      sf.style.animationDelay = delay + "s";
+
+      snowLayer.appendChild(sf);
+    }
+
+    for (let i = 0; i < SNOWFLAKE_COUNT; i++) {
+      createSnowflake();
+    }
+  </script>
+</body>
+</html>
