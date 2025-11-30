@@ -307,14 +307,19 @@
   <audio id="bg-music" src="loop.mp3" loop></audio>
 
   <script>
-    const CURRENT_YEAR = new Date().getFullYear();
+    const urlParams = new URLSearchParams(window.location.search);
+    const ALL_OPEN = urlParams.get("allopen") === "true";
+    var CURRENT_YEAR = new Date().getFullYear();
+    const PARAM_YEAR = urlParams.get("year");
+    if (PARAM_YEAR != null) {
+      CURRENT_YEAR = PARAM_YEAR;
+    }
     const IMAGE_BASE_PATH = "./" + CURRENT_YEAR + "/";
     const TOTAL_DOORS = 24;
     const COOKIE_NAME = "adventOpenedDoors";
     const ORDER_COOKIE_NAME = "adventDoorOrder";
 
-    const urlParams = new URLSearchParams(window.location.search);
-    const ALL_OPEN = urlParams.get("allopen") === "true";
+    
 
     // Überschrift "Fini <Jahr>"
     document.getElementById("page-title").textContent = "🎁 Fini " + CURRENT_YEAR + " 🎁";
